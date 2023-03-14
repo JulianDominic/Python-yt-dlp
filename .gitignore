@@ -1,0 +1,6 @@
+# Ignoring Information
+.env
+__pycache__
+
+# Ignoring Test Code
+testing.ipynb
