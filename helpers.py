@@ -1,9 +1,12 @@
 from yt_dlp import YoutubeDL
+import os
+
 
 def get_info(URL:str):
     """This function extracts the video's information regarding its (i) resolution, (ii) video extension, (iii) audio extension, and (iv) fps. We return a 'video_set' which is a tuple that contains the different resolution, video extension, and fps combinations available for download. We drop certain video extensions such as 3gp. This function also assumes that we are only inputting 1 video rather than a playlist."""
     with YoutubeDL() as ydl:
         info = ydl.extract_info(URL, download=False)
+        title = info["title"]
         # ydl.list_formats(info)
         format_info = info['formats']
 
@@ -45,7 +48,7 @@ def get_info(URL:str):
         aext_set = sorted(main_sets["aext"].intersection(aext_set))
         video_set = sorted(video_set)
 
-        return res_set, vext_set, aext_set, video_set
+        return res_set, vext_set, aext_set, video_set, title
 
 
 def get_options(res_set:list, vext_set:list, video_set:list) -> dict:
@@ -83,3 +86,32 @@ def clean_res(res: str):
         return res
     except ValueError:
         return False
+
+
+def check_if_playlist(url):
+    """Check if the link that is inputted is a playlist link or not"""
+    ydl = YoutubeDL()
+    result = ydl.extract_info(url, download=False, process=False)
+    if 'entries' in result:
+        return True
+    else:
+        return False
+
+
+def get_individual_links_from_playlist(playlist_url):
+    """Get the individual links from the playlist by extracting the link information"""
+    ydl = YoutubeDL()
+    # Extract the individual video links from the playlist
+    result = ydl.extract_info(playlist_url, download=False)
+
+    # Extract the video links from the playlist entries
+    video_links = []
+    for entry in result['entries']:
+        if entry:
+            video_links.append(entry['webpage_url'])
+    return video_links
+
+
+def clear_screen():
+    """Clear the console screen"""
+    os.system('cls' if os.name=='nt' else 'clear')

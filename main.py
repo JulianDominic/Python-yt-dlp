@@ -1,13 +1,11 @@
 from yt_dlp import YoutubeDL
-import os
+import re, os, sys
 from dotenv import load_dotenv
-from helpers import get_info, get_options
-import re
+from helpers import get_info, get_options, check_if_playlist, get_individual_links_from_playlist, clear_screen
+
 
 def main():
-    load_dotenv()
-    download_path = os.getenv("download_path")
-    os.chdir(download_path)
+    set_download_location()
 
     url_regex = re.compile(
             r"^https?://"  # match http:// or https://
@@ -25,9 +23,32 @@ def main():
         else:
             print("Invalid URL.\n")
             continue
+    
+    # Detect if it is a playlist
+    is_playlist = check_if_playlist(URL)
 
-    res_set, vext_set, aexts, video_set = get_info(URL=URL)
-    res_options = get_options(res_set=res_set, vext_set=vext_set, video_set=video_set)
+    if is_playlist:
+        links = get_individual_links_from_playlist(URL)
+        for link in links:
+            download_video(link)
+    else:
+        download_video(URL)
+
+
+def set_download_location():
+    load_dotenv()
+    # Place the absolute path in the ".env" file
+    download_path = os.getenv("download_path")
+    os.chdir(download_path)
+
+
+def get_user_options(res_options, aexts, title):
+    clear_screen()
+    print(f"Video being downloaded: {title}")
+    if not(res_options):
+        print("Sorry there's no information available!")
+        sys.exit()
+    
     while True:
         print([resolution for resolution in res_options])
         try:
@@ -35,8 +56,8 @@ def main():
             if res not in res_options:
                 print("Invalid input\n")
                 continue
-        except ValueError:
-            print("Invalid input\n")
+        except Exception as e:
+            print(e)
             continue
 
         print([vext for vext in res_options[res]])
@@ -51,8 +72,8 @@ def main():
             if fps not in res_options[res][vext]:
                 print("Invalid input\n")
                 continue
-        except ValueError:
-            print("Invalid input\n")
+        except Exception as e:
+            print(e)
             continue
 
         print(aexts)
@@ -61,16 +82,24 @@ def main():
             print("Invalid input\n")
             continue
         break
+    return res, vext, fps, aext
 
-    #= See help(YoutubeDL) for a list of available options and public functions
+
+def download_video(video_link):
+    res_set, vext_set, aexts, video_set, title = get_info(URL=video_link)
+    res_options = get_options(res_set=res_set, vext_set=vext_set, video_set=video_set)
+    res, vext, fps, aext =  get_user_options(res_options, aexts, title)
+
+    # See help(YoutubeDL) for a list of available options and public functions
     ydl_opts = {
         'format': f'bestvideo[height<={res}][fps={fps}]+bestaudio[ext={aext}]',
-        'merge_output_format': f'{vext}'
+        'merge_output_format': f'{vext}',
+        'outtmpl': '%(title)s.%(ext)s'
         }
-
+ 
     # Send the URL and options selected into downloading
     with YoutubeDL(ydl_opts) as ydl:
-        ydl.download(URL)
+        ydl.download(video_link)
 
 
 if __name__ == "__main__":
