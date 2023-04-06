@@ -26,14 +26,8 @@ def main():
         else:
             print("Invalid URL.\n")
             continue
-    
-    if "tiktok" or "instagram" in URL:
-        ydl_opts = {
-            'outtmpl': '%(title)s.%(ext)s'
-            }
-        with YoutubeDL(ydl_opts) as ydl:
-            ydl.download(URL)
-    elif "youtube" or "youtu.be" in URL:
+    yt_urls = ["youtube", "youtu.be"]
+    if any(yt_url in URL for yt_url in yt_urls):
         info_result = extract_video_information(URL)
         # Detect if it is a playlist
         is_playlist = check_if_playlist(info_result)
@@ -44,6 +38,16 @@ def main():
                 download_video(link)
         else:
             download_video(URL)
+            sys.exit()
+
+    other_urls = ["tiktok", "instagram", "reddit"]
+    if any(other_url in URL for other_url in other_urls):
+        ydl_opts = {
+            'outtmpl': '%(title)s.%(ext)s'
+            }
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download(URL)
+            sys.exit()
 
 
 def set_download_location():
