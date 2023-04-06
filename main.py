@@ -1,7 +1,10 @@
+#! python3
+# main.py - This program allows users to download Youtube Videos via the CLI
+
 from yt_dlp import YoutubeDL
 import re, os, sys
 from dotenv import load_dotenv
-from helpers import get_info, get_options, check_if_playlist, get_individual_links_from_playlist, clear_screen
+from helpers import get_info, get_options, check_if_playlist, get_individual_links_from_playlist, clear_screen, extract_video_information
 
 
 def main():
@@ -24,15 +27,20 @@ def main():
             print("Invalid URL.\n")
             continue
     
-    # Detect if it is a playlist
-    is_playlist = check_if_playlist(URL)
+    if "tiktok" in URL:
+        with YoutubeDL() as ydl:
+            ydl.download(URL)
+    elif "youtube" or "youtu.be" in URL:
+        info_result = extract_video_information(URL)
+        # Detect if it is a playlist
+        is_playlist = check_if_playlist(info_result)
 
-    if is_playlist:
-        links = get_individual_links_from_playlist(URL)
-        for link in links:
-            download_video(link)
-    else:
-        download_video(URL)
+        if is_playlist:
+            links = get_individual_links_from_playlist(info_result)
+            for link in links:
+                download_video(link)
+        else:
+            download_video(URL)
 
 
 def set_download_location():
@@ -86,7 +94,8 @@ def get_user_options(res_options, aexts, title):
 
 
 def download_video(video_link):
-    res_set, vext_set, aexts, video_set, title = get_info(URL=video_link)
+    info_result = extract_video_information(video_link)
+    res_set, vext_set, aexts, video_set, title = get_info(info=info_result)
     res_options = get_options(res_set=res_set, vext_set=vext_set, video_set=video_set)
     res, vext, fps, aext =  get_user_options(res_options, aexts, title)
 
