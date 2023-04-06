@@ -27,8 +27,11 @@ def main():
             print("Invalid URL.\n")
             continue
     
-    if "tiktok" in URL:
-        with YoutubeDL() as ydl:
+    if "tiktok" or "instagram" in URL:
+        ydl_opts = {
+            'outtmpl': '%(title)s.%(ext)s'
+            }
+        with YoutubeDL(ydl_opts) as ydl:
             ydl.download(URL)
     elif "youtube" or "youtu.be" in URL:
         info_result = extract_video_information(URL)
