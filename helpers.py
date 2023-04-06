@@ -2,53 +2,57 @@ from yt_dlp import YoutubeDL
 import os
 
 
-def get_info(URL:str):
-    """This function extracts the video's information regarding its (i) resolution, (ii) video extension, (iii) audio extension, and (iv) fps. We return a 'video_set' which is a tuple that contains the different resolution, video extension, and fps combinations available for download. We drop certain video extensions such as 3gp. This function also assumes that we are only inputting 1 video rather than a playlist."""
+def extract_video_information(video_link):
     with YoutubeDL() as ydl:
-        info = ydl.extract_info(URL, download=False)
-        title = info["title"]
-        # ydl.list_formats(info)
-        format_info = info['formats']
+        info_result = ydl.extract_info(video_link, download=False)
+    return info_result
 
-        main_sets = {
-                    "vext": {"mp4", "mov", "webm", "flv", "mkv"},
-                    "aext": {"m4a", "aac", "mp3", "ogg", "opus", "webm"},
-                    }
 
-        res_set = set()
-        vext_set = set()
-        aext_set = set()
+def get_info(info:dict):
+    """This function extracts the video's information regarding its (i) resolution, (ii) video extension, (iii) audio extension, and (iv) fps. We return a 'video_set' which is a tuple that contains the different resolution, video extension, and fps combinations available for download. We drop certain video extensions such as 3gp. This function also assumes that we are only inputting 1 video rather than a playlist."""
+    title = info["title"]
+    # ydl.list_formats(info)
+    format_info = info['formats']
 
-        video_set = set()
+    main_sets = {
+                "vext": {"mp4", "mov", "webm", "flv", "mkv"},
+                "aext": {"m4a", "aac", "mp3", "ogg", "opus", "webm"},
+                }
 
-        for information in format_info:
-            aext = information["audio_ext"]
-            aext_set.add(aext)
-            try:
-                res = information["format"]
-                res = clean_res(res)
-                if not(res):
-                    continue
-            except KeyError:
+    res_set = set()
+    vext_set = set()
+    aext_set = set()
+
+    video_set = set()
+
+    for information in format_info:
+        aext = information["audio_ext"]
+        aext_set.add(aext)
+        try:
+            res = information["format"]
+            res = clean_res(res)
+            if not(res):
                 continue
-            vext = information["video_ext"]
-            if vext not in main_sets["vext"]:
-                continue
-            
-            fps = information["fps"]
-            video_info = (res, vext, fps)
+        except KeyError:
+            continue
+        vext = information["video_ext"]
+        if vext not in main_sets["vext"]:
+            continue
+        
+        fps = information["fps"]
+        video_info = (res, vext, fps)
 
-            res_set.add(res)
-            vext_set.add(vext)
+        res_set.add(res)
+        vext_set.add(vext)
 
-            video_set.add(video_info)
-            
-        res_set = sorted(res_set)
-        vext_set = sorted(main_sets["vext"].intersection(vext_set))
-        aext_set = sorted(main_sets["aext"].intersection(aext_set))
-        video_set = sorted(video_set)
+        video_set.add(video_info)
+        
+    res_set = sorted(res_set)
+    vext_set = sorted(main_sets["vext"].intersection(vext_set))
+    aext_set = sorted(main_sets["aext"].intersection(aext_set))
+    video_set = sorted(video_set)
 
-        return res_set, vext_set, aext_set, video_set, title
+    return res_set, vext_set, aext_set, video_set, title
 
 
 def get_options(res_set:list, vext_set:list, video_set:list) -> dict:
@@ -88,22 +92,16 @@ def clean_res(res: str):
         return False
 
 
-def check_if_playlist(url):
+def check_if_playlist(result:dict):
     """Check if the link that is inputted is a playlist link or not"""
-    ydl = YoutubeDL()
-    result = ydl.extract_info(url, download=False, process=False)
     if 'entries' in result:
         return True
     else:
         return False
 
 
-def get_individual_links_from_playlist(playlist_url):
+def get_individual_links_from_playlist(result:dict):
     """Get the individual links from the playlist by extracting the link information"""
-    ydl = YoutubeDL()
-    # Extract the individual video links from the playlist
-    result = ydl.extract_info(playlist_url, download=False)
-
     # Extract the video links from the playlist entries
     video_links = []
     for entry in result['entries']:
