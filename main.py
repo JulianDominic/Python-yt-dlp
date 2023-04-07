@@ -26,6 +26,7 @@ def main():
         else:
             print("Invalid URL.\n")
             continue
+
     yt_urls = ["youtube", "youtu.be"]
     if any(yt_url in URL for yt_url in yt_urls):
         info_result = extract_video_information(URL)
@@ -40,7 +41,7 @@ def main():
             download_video(URL)
             sys.exit()
 
-    other_urls = ["tiktok", "instagram", "reddit"]
+    other_urls = ["tiktok", "instagram", "reddit", "twitch"]
     if any(other_url in URL for other_url in other_urls):
         ydl_opts = {
             'outtmpl': '%(title)s.%(ext)s'
@@ -59,7 +60,7 @@ def set_download_location():
 
 def get_user_options(res_options, aexts, title):
     clear_screen()
-    print(f"Video being downloaded: {title}")
+    print(f"Video being downloaded:\n{title}")
     if not(res_options):
         print("Sorry there's no information available!")
         sys.exit()
