@@ -1,5 +1,6 @@
 # Python-yt-dlp
 *Has been tested on Win10/11 and Arch Linux*
+
 This allows users to select their desired resolution, video extension, audio extension, and fps when downloading a video via the command line interface (CLI). 
 Usage:
   1. Ensure that you have the [python-dotenv](https://pypi.org/project/python-dotenv/) and [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation) modules installed. You do so by doing `pip install -r requirements.txt`. Essentially, download all the dependencies.
