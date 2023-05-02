@@ -1,8 +1,8 @@
 # Python-yt-dlp
-
+*Has been tested on Win10/11 and Arch Linux*
 This allows users to select their desired resolution, video extension, audio extension, and fps when downloading a video via the command line interface (CLI). 
 Usage:
-  1. Ensure that you have the [python-dotenv](https://pypi.org/project/python-dotenv/) and [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation) modules installed. You do so by doing `pip install -r requirements.txt`
+  1. Ensure that you have the [python-dotenv](https://pypi.org/project/python-dotenv/) and [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation) modules installed. You do so by doing `pip install -r requirements.txt`. Essentially, download all the dependencies.
   2. As well as the [FFMPEG](https://ffmpeg.org/download.html) program to merge video/audio files.
   3. Create a `.env` file to store your `download_path` or you can manually add it in.
   4. Run the script.
@@ -30,7 +30,8 @@ Usage:
 3. Click on `Windows Build from gyan.dev`; You will be redirected to another website
 4. Click on `ffmpeg-git-essentials.7z`
 5. Extract the file using 7zip
-6. Open the folder, open `bin`, copy/cut and paste the `ffmpeg.exe` into the download path (the folder where u want to download the videos in)
+6. (a) Open the folder, open `bin`, copy/cut and paste the `ffmpeg.exe` into the download path (the folder where u want to download the videos in)
+6. (b) You can add `ffmpeg.exe` to `PATH` instead of doing (a).
 
 ## (Step 5: Download the files from Github) & (Step 6: Create a .env file to store your download path):
 1. Click on `Code` (It's green colour)
@@ -48,7 +49,7 @@ Usage:
 4. Type `New-Item .env` (If you haven't done so already)
 
 -----------------------------------------
-### Finally, run main.py
+## Finally, run main.py
 
 # Creating a Batch File
 ## yt-dlp.bat
