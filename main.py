@@ -4,7 +4,7 @@
 from yt_dlp import YoutubeDL
 import re, os, sys
 from dotenv import load_dotenv
-from helpers import get_info, get_options, check_if_playlist, get_individual_links_from_playlist, clear_screen, extract_video_information
+from helpers import get_info, get_options, check_if_playlist, get_individual_links_from_playlist, clear_screen, extract_video_information, get_user_options
 
 
 def main():
@@ -36,19 +36,25 @@ def main():
         if is_playlist:
             links = get_individual_links_from_playlist(info_result)
             for link in links:
-                download_video(link)
+                info_result = extract_video_information(link)
+                download_video(URL, best=False, info_result=info_result)
         else:
-            download_video(URL)
+            while True:
+                user_choice_best = input("Skip selection to download best option? (Y/n): ")
+                if user_choice_best.lower() == "n":
+                    break
+                elif user_choice_best.upper() == "Y":
+                    clear_screen()
+                    download_video(URL, best=True, info_result=info_result)
+                    sys.exit()
+                else:
+                    print("Invalid input\n")
+                    continue
+            download_video(URL, best=False, info_result=info_result)
             sys.exit()
-
-    other_urls = ["tiktok", "instagram", "reddit", "twitch"]
-    if any(other_url in URL for other_url in other_urls):
-        ydl_opts = {
-            'outtmpl': '%(title)s.%(ext)s'
-            }
-        with YoutubeDL(ydl_opts) as ydl:
-            ydl.download(URL)
-            sys.exit()
+    else:
+        clear_screen()
+        download_video(URL, best=True)
 
 
 def set_download_location():
@@ -58,54 +64,20 @@ def set_download_location():
     os.chdir(download_path)
 
 
-def get_user_options(res_options, aexts, title):
-    clear_screen()
-    print(f"Video being downloaded:\n{title}")
-    if not(res_options):
-        print("Sorry there's no information available!")
-        sys.exit()
-    
-    while True:
-        print([resolution for resolution in res_options])
-        try:
-            res = int(input("Choose your resolution\n> "))
-            if res not in res_options:
-                print("Invalid input\n")
-                continue
-        except Exception as e:
-            print(e)
-            continue
-
-        print([vext for vext in res_options[res]])
-        vext = input("Choose your video extension\n> ")
-        if vext not in res_options[res]:
-            print("Invalid input\n")
-            continue
-
-        print([fps for fps in res_options[res][vext]])
-        try:
-            fps = int(input("Choose your video fps\n> "))
-            if fps not in res_options[res][vext]:
-                print("Invalid input\n")
-                continue
-        except Exception as e:
-            print(e)
-            continue
-
-        print(aexts)
-        aext = input("Choose your audio extension\n> ")
-        if aext not in aexts:
-            print("Invalid input\n")
-            continue
-        break
-    return res, vext, fps, aext
-
-
-def download_video(video_link):
-    info_result = extract_video_information(video_link)
+def download_video(video_link:str, best, info_result=None):
+    if best:
+        ydl_opts = {
+            'outtmpl': '%(title)s.%(ext)s'
+            }
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download(video_link)
+            sys.exit()
+    if info_result == None:
+        info_result = extract_video_information(video_link)
     res_set, vext_set, aexts, video_set, title = get_info(info=info_result)
     res_options = get_options(res_set=res_set, vext_set=vext_set, video_set=video_set)
     res, vext, fps, aext =  get_user_options(res_options, aexts, title)
+    clear_screen()
 
     # See help(YoutubeDL) for a list of available options and public functions
     ydl_opts = {
@@ -113,7 +85,7 @@ def download_video(video_link):
         'merge_output_format': f'{vext}',
         'outtmpl': '%(title)s.%(ext)s'
         }
- 
+    
     # Send the URL and options selected into downloading
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download(video_link)

@@ -1,8 +1,9 @@
 from yt_dlp import YoutubeDL
 import os
+import sys
 
 
-def extract_video_information(video_link):
+def extract_video_information(video_link) -> dict:
     with YoutubeDL() as ydl:
         info_result = ydl.extract_info(video_link, download=False)
     return info_result
@@ -92,7 +93,7 @@ def clean_res(res: str):
         return False
 
 
-def check_if_playlist(result:dict):
+def check_if_playlist(result:dict) -> list:
     """Check if the link that is inputted is a playlist link or not"""
     if 'entries' in result:
         return True
@@ -113,3 +114,62 @@ def get_individual_links_from_playlist(result:dict):
 def clear_screen():
     """Clear the console screen"""
     os.system('cls' if os.name=='nt' else 'clear')
+
+
+def get_user_options(res_options, aexts, title):
+    clear_screen()
+    print(f"Video being downloaded:\n{title}")
+    if not(res_options):
+        print("Sorry there's no information available!")
+        sys.exit()
+    exit_flag = False
+    while not(exit_flag):
+        print([resolution for resolution in res_options])
+        try:
+            res = int(input("Choose your resolution\n> "))
+            if res not in res_options:
+                print("Invalid input\n")
+                continue
+        except Exception as e:
+            print(e)
+            continue
+
+        print([vext for vext in res_options[res]])
+        vext = input("Choose your video extension\n> ")
+        if vext not in res_options[res]:
+            print("Invalid input\n")
+            continue
+
+        print([fps for fps in res_options[res][vext]])
+        try:
+            fps = int(input("Choose your video fps\n> "))
+            if fps not in res_options[res][vext]:
+                print("Invalid input\n")
+                continue
+        except Exception as e:
+            print(e)
+            continue
+
+        print(aexts)
+        aext = input("Choose your audio extension\n> ")
+        if aext not in aexts:
+            print("Invalid input\n")
+            continue
+        
+        while True:
+            clear_screen()
+            print("These are your selected options:")
+            print(f"Resolution: {res}")
+            print(f"Video Extension: {vext}")
+            print(f"FPS: {fps}")
+            print(f"Audio Extension: {aext}")
+            confirmation = input("Are these settings confirmed? (Y/n): ")
+            if confirmation.lower() == "n":
+                break
+            elif confirmation.upper() == "Y":
+                exit_flag = True
+                break
+            else:
+                print("Invalid input\n")
+                continue
+    return res, vext, fps, aext
