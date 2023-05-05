@@ -71,7 +71,7 @@ def get_options(res_set:list, vext_set:list, video_set:list) -> dict:
     return res_options
     
 
-def clean_res(res: str):
+def clean_res(res:str):
     """This function cleans up the output we get from 'format_info' in get_info. A typical output would look something like '22 - 960x720 (720p)' which we will turn into '720'."""
     start, end, cout = 0, 0, 0
     for char in res:
@@ -93,15 +93,24 @@ def clean_res(res: str):
         return False
 
 
-def check_if_playlist(result:dict) -> list:
-    """Check if the link that is inputted is a playlist link or not"""
+def check_if_playlist(result:dict) -> bool:
+    """Check if the link entered is a playlist"""
     if 'entries' in result:
         return True
     else:
         return False
+    
+
+def check_if_short(result:dict) -> bool:
+    """Check if the link entered is a short"""
+    if 'duration' in result:
+        if result['duration'] <= 60:
+            return True
+    else:
+        return False
 
 
-def get_individual_links_from_playlist(result:dict):
+def get_individual_links_from_playlist(result:dict) -> list:
     """Get the individual links from the playlist by extracting the link information"""
     # Extract the video links from the playlist entries
     video_links = []
@@ -116,7 +125,7 @@ def clear_screen():
     os.system('cls' if os.name=='nt' else 'clear')
 
 
-def get_user_options(res_options, aexts, title):
+def get_user_options(res_options:list, aexts:list, title:list):
     clear_screen()
     print(f"Video being downloaded:\n{title}")
     if not(res_options):

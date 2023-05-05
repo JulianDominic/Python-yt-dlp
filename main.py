@@ -4,7 +4,7 @@
 from yt_dlp import YoutubeDL
 import re, os, sys
 from dotenv import load_dotenv
-from helpers import get_info, get_options, check_if_playlist, get_individual_links_from_playlist, clear_screen, extract_video_information, get_user_options
+from helpers import get_info, get_options, check_if_playlist, check_if_short, get_individual_links_from_playlist, clear_screen, extract_video_information, get_user_options
 
 
 def main():
@@ -32,12 +32,14 @@ def main():
         info_result = extract_video_information(URL)
         # Detect if it is a playlist
         is_playlist = check_if_playlist(info_result)
+        is_short = check_if_short(info_result)
 
         if is_playlist:
             links = get_individual_links_from_playlist(info_result)
             for link in links:
                 info_result = extract_video_information(link)
-                download_video(URL, best=False, info_result=info_result)
+                is_short = check_if_short(info_result)
+                download_video(URL, best=False, info_result=info_result, yt_short=is_short)
         else:
             while True:
                 user_choice_best = input("Skip selection to download best option? (Y/n): ")
@@ -50,7 +52,7 @@ def main():
                 else:
                     print("Invalid input\n")
                     continue
-            download_video(URL, best=False, info_result=info_result)
+            download_video(URL, best=False, info_result=info_result, yt_short=is_short)
             sys.exit()
     else:
         clear_screen()
@@ -59,12 +61,12 @@ def main():
 
 def set_download_location():
     load_dotenv()
-    # Place the absolute path in the ".env" file
+    # Place the absolute path in the .env file
     download_path = os.getenv("download_path")
     os.chdir(download_path)
 
 
-def download_video(video_link:str, best, info_result=None):
+def download_video(video_link:str, best:bool, info_result:dict=None, yt_short:bool=None):
     if best:
         ydl_opts = {
             'outtmpl': '%(title)s.%(ext)s'
@@ -80,12 +82,18 @@ def download_video(video_link:str, best, info_result=None):
     clear_screen()
 
     # See help(YoutubeDL) for a list of available options and public functions
-    ydl_opts = {
-        'format': f'bestvideo[height<={res}][fps={fps}]+bestaudio[ext={aext}]',
-        'merge_output_format': f'{vext}',
-        'outtmpl': '%(title)s.%(ext)s'
-        }
-    
+    if yt_short:
+        ydl_opts = {
+            'format': f'bestvideo[width<={res}][fps={fps}]+bestaudio[ext={aext}]',
+            'merge_output_format': f'{vext}',
+            'outtmpl': '%(title)s.%(ext)s'
+            }
+    else:
+        ydl_opts = {
+            'format': f'bestvideo[height<={res}][fps={fps}]+bestaudio[ext={aext}]',
+            'merge_output_format': f'{vext}',
+            'outtmpl': '%(title)s.%(ext)s'
+            }
     # Send the URL and options selected into downloading
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download(video_link)
