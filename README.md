@@ -5,7 +5,7 @@ This allows users to select their desired resolution, video extension, audio ext
 Usage:
   1. Ensure that you have the [python-dotenv](https://pypi.org/project/python-dotenv/) and [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation) modules installed. You do so by doing `pip install -r requirements.txt`. Essentially, download all the dependencies.
   2. As well as the [FFMPEG](https://ffmpeg.org/download.html) program to merge video/audio files.
-  3. Create a `.env` file to store your `download_path` or you can manually add it in.
+  3. Create a `.env` file to store your `download_path` or you can manually add it into `main.py` directly.
   4. Run the script.
 
 # For more detailed instructions:
