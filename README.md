@@ -5,7 +5,7 @@
 ## Usage
 
 1. Make sure Python is installed
-2. Make sure 7zip is installed (used for step 3)
+2. Make sure 7zip is installed (used for installing step 3 -- recommended)
 3. Make sure FFMPEG is installed
 4. Download/Clone the repository
 5. Create a `.env` file and store your `download_path`
