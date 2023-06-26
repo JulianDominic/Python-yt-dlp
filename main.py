@@ -7,7 +7,7 @@ from helpers import Start, Download, set_download_location
 def main():
     start = Start()
     url = start.get_url_from_user()
-    best = start.is_best()
+    best = start.is_best(url)
     dl = Download()
     dl.download_video(url, best)
 

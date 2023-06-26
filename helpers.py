@@ -15,7 +15,7 @@ class Start:
         else:
             return video_link
 
-    def is_url(self, url: str) -> bool:
+    def is_url(self, url:str) -> bool:
         """
         Checks if the input is a URL
         """
@@ -28,13 +28,16 @@ class Start:
                 )
         if url_regex.search(url):
             return True
-        return False
+        else:
+            return False
     
 
-    def is_best(self) -> bool:
+    def is_best(self, url:str) -> bool:
         """
-        Checks if the user has chosen the 'best' option
+        Checks if the user has chosen the 'best' option for ydl_opts
         """
+        if not(self.is_youtube_url(url)):
+            return True
         while True:
             user_best = input("Skip custom settings and download the recommended settings? (Y/n): ").lower()
             if user_best == "y" or user_best == "":
@@ -43,7 +46,18 @@ class Start:
             elif user_best == "n":
                 clear_screen()
                 return False
+    
 
+    def is_youtube_url(self, url:str) -> bool:
+        """
+        Checks if the URL is for a youtube video
+        """
+        yt_urls = ["youtube", "youtu.be"]
+        if any([yt_url in url for yt_url in yt_urls]):
+            return True
+        else:
+            return False
+    
 
 class Download:
     def extract_video_information_dict(self, video_link:str) -> dict:
@@ -149,7 +163,7 @@ class Download:
 
     def download_video(self, video_link, best=False) -> None:
         """
-        Sends the download options into the YoutubeDL function
+        Sends the download options into the YoutubeDL class's download() method
         """
         if best:
             ydl_opts = {
@@ -185,6 +199,9 @@ def clear_screen() -> None:
 
 
 def set_download_location() -> None:
+    """
+    Sets the download location of the video file by changing the working directory to the download location
+    """
     load_dotenv()
     # Place the absolute path in the .env file
     download_path = os.getenv("download_path")
