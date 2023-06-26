@@ -1,184 +1,192 @@
+import os, re
 from yt_dlp import YoutubeDL
-import os
-import sys
+from dotenv import load_dotenv
 
-
-def extract_video_information(video_link) -> dict:
-    with YoutubeDL() as ydl:
-        info_result = ydl.extract_info(video_link, download=False)
-    return info_result
-
-
-def get_info(info:dict):
-    """This function extracts the video's information regarding its (i) resolution, (ii) video extension, (iii) audio extension, and (iv) fps. We return a 'video_set' which is a tuple that contains the different resolution, video extension, and fps combinations available for download. We drop certain video extensions such as 3gp. This function also assumes that we are only inputting 1 video rather than a playlist."""
-    title = info["title"]
-    # ydl.list_formats(info)
-    format_info = info['formats']
-
-    main_sets = {
-                "vext": {"mp4", "mov", "webm", "flv", "mkv"},
-                "aext": {"m4a", "aac", "mp3", "ogg", "opus", "webm"},
-                }
-
-    res_set = set()
-    vext_set = set()
-    aext_set = set()
-
-    video_set = set()
-
-    for information in format_info:
-        aext = information["audio_ext"]
-        aext_set.add(aext)
-        try:
-            res = information["format"]
-            res = clean_res(res)
-            if not(res):
-                continue
-        except KeyError:
-            continue
-        vext = information["video_ext"]
-        if vext not in main_sets["vext"]:
-            continue
-        
-        fps = information["fps"]
-        video_info = (res, vext, fps)
-
-        res_set.add(res)
-        vext_set.add(vext)
-
-        video_set.add(video_info)
-        
-    res_set = sorted(res_set)
-    vext_set = sorted(main_sets["vext"].intersection(vext_set))
-    aext_set = sorted(main_sets["aext"].intersection(aext_set))
-    video_set = sorted(video_set)
-
-    return res_set, vext_set, aext_set, video_set, title
-
-
-def get_options(res_set:list, vext_set:list, video_set:list) -> dict:
-    """This function takes in the resolutions, video extensions, and the different combinations available from get_info in order to package them nicely into different dictionaries where the main key is the resolution whose values are video extensions that contain the different fps values."""
-    res_options = {}
-    for resolution in res_set:
-        vext_options = {}
-        for vext in vext_set:
-            vext_options[vext] = []
-            for item in video_set:
-                if item[0] == resolution and item[1] == vext:
-                    vext_options[vext].append(item[2])
-        res_options[resolution] = vext_options
-        
-    return res_options
-    
-
-def clean_res(res:str):
-    """This function cleans up the output we get from 'format_info' in get_info. A typical output would look something like '22 - 960x720 (720p)' which we will turn into '720'."""
-    start, end, cout = 0, 0, 0
-    for char in res:
-        if char == "(":
-            start = cout + 1
-        elif char == ")":
-            end = cout
-        cout += 1
-
-    res = res[start:end]
-    res = res.replace("HDR", "")
-    res = res.replace("p60", "")
-    res = res.replace("p", "")
-    
-    try:
-        res = int(res)
-        return res
-    except ValueError:
-        return False
-
-
-def check_if_playlist(result:dict) -> bool:
-    """Check if the link entered is a playlist"""
-    if 'entries' in result:
-        return True
-    else:
-        return False
-    
-
-def check_if_short(result:dict) -> bool:
-    """Check if the link entered is a short"""
-    if 'duration' in result:
-        if result['duration'] <= 60:
-            return True
-    else:
-        return False
-
-
-def get_individual_links_from_playlist(result:dict) -> list:
-    """Get the individual links from the playlist by extracting the link information"""
-    # Extract the video links from the playlist entries
-    video_links = []
-    for entry in result['entries']:
-        if entry:
-            video_links.append(entry['webpage_url'])
-    return video_links
-
-
-def clear_screen():
-    """Clear the console screen"""
-    os.system('cls' if os.name=='nt' else 'clear')
-
-
-def get_user_options(res_options:list, aexts:list, title:list):
-    clear_screen()
-    print(f"Video being downloaded:\n{title}")
-    if not(res_options):
-        print("Sorry there's no information available!")
-        sys.exit()
-    exit_flag = False
-    while not(exit_flag):
-        print([resolution for resolution in res_options])
-        try:
-            res = int(input("Choose your resolution\n> "))
-            if res not in res_options:
-                print("Invalid input\n")
-                continue
-        except Exception as e:
-            print(e)
-            continue
-
-        print([vext for vext in res_options[res]])
-        vext = input("Choose your video extension\n> ")
-        if vext not in res_options[res]:
-            print("Invalid input\n")
-            continue
-
-        print([fps for fps in res_options[res][vext]])
-        try:
-            fps = int(input("Choose your video fps\n> "))
-            if fps not in res_options[res][vext]:
-                print("Invalid input\n")
-                continue
-        except Exception as e:
-            print(e)
-            continue
-
-        print(aexts)
-        aext = input("Choose your audio extension\n> ")
-        if aext not in aexts:
-            print("Invalid input\n")
-            continue
-        
-        while True:
+class Start:
+    def get_url_from_user(self) -> str:
+        """
+        Prompts the user for the video link
+        """
+        valid = False
+        while not(valid):
+            video_link = input("Enter the video link for download \n> ")
+            valid = self.is_url(video_link)
             clear_screen()
-            print("These are your selected options:")
-            print(f"Resolution: {res}")
-            print(f"Video Extension: {vext}")
-            print(f"FPS: {fps}")
-            print(f"Audio Extension: {aext}")
-            confirmation = input("Are these settings confirmed? (Y/n): ")
-            if confirmation.lower() == "n":
-                break
-            elif confirmation.upper() == "Y":
-                exit_flag = True
-                break
-            else:
-                print("Invalid input\n")
+        else:
+            return video_link
+
+    def is_url(self, url: str) -> bool:
+        """
+        Checks if the input is a URL
+        """
+        url_regex = re.compile(
+                r"^https?://"  # match http:// or https://
+                r"([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}"  # match domain name
+                r"(:[0-9]{1,5})?"  # optional port number
+                r"(/.*)?$",  # match path and query string if present
+                re.IGNORECASE
+                )
+        if url_regex.search(url):
+            return True
+        return False
+    
+
+    def is_best(self) -> bool:
+        """
+        Checks if the user has chosen the 'best' option
+        """
+        while True:
+            user_best = input("Skip custom settings and download the recommended settings? (Y/n): ").lower()
+            if user_best == "y" or user_best == "":
+                clear_screen()
+                return True
+            elif user_best == "n":
+                clear_screen()
+                return False
+
+
+class Download:
+    def extract_video_information_dict(self, video_link:str) -> dict:
+        """
+        Gets the video information provided by the website
+        """
+        with YoutubeDL() as ydl:
+            info_result = ydl.extract_info(video_link, download=False)
+        return info_result
+    
+
+    def parse_video_information_dict(self, video_link:str) -> list:
+        """
+        Parses the video_information_dict to get the download options
+        """
+        video_information_dict = self.extract_video_information_dict(video_link)
+        video_duration = video_information_dict["duration"]
+        all_formats = video_information_dict["formats"]
+        
+        all_download_options = []
+        for single_format in all_formats:
+            download_options = {
+                "resolution": None,
+                "fps": None,
+                "video_ext": None
+                }
+            try:
+                format_note: str = single_format["format_note"]
+                fps: str = single_format["fps"]
+                video_ext: str = single_format["ext"]
+                if format_note[0].isdigit():
+                    resolution = format_note.split('p')[0]
+                    download_options["resolution"], download_options["fps"], download_options["video_ext"] = resolution, fps, video_ext
+                    all_download_options.append(download_options)
+            except KeyError:
                 continue
-    return res, vext, fps, aext
+        else:
+            clear_screen()
+            return [video_duration, all_download_options]
+    
+
+    def get_user_download_options(self, video_link:str) -> list:
+        """
+        Get the user's input & download option
+        """
+        video_duration, all_download_options = self.parse_video_information_dict(video_link)
+        processed_download_options = {}
+        for download_option in all_download_options:
+            resolution, fps, video_ext = download_option["resolution"], download_option["fps"], download_option["video_ext"]
+            resolution = int(resolution)
+            if not(resolution in processed_download_options):
+                processed_download_options[resolution] = {}
+            if not(fps in processed_download_options[resolution]):
+                processed_download_options[resolution][fps] = []
+            if not(video_ext in processed_download_options[resolution][fps]):
+                processed_download_options[resolution][fps] += [video_ext]
+        
+        flag_resolution = False
+        flag_fps = False
+        flag_video_ext = False
+
+        while not(flag_resolution):
+            print([i for i in processed_download_options])
+            try:
+                user_resolution = int(input("Choose your resolution\n> "))
+                if user_resolution not in processed_download_options:
+                    print("Invalid input\n")
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            else:
+                flag_resolution = True
+        
+        while not(flag_fps):
+            print([j for j in processed_download_options[user_resolution]])
+            try:
+                user_fps = int(input("Choose your video FPS\n> "))
+                if user_fps not in processed_download_options[user_resolution]:
+                    print("Invalid input\n")
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            else:
+                flag_fps = True
+
+        while not(flag_video_ext):
+            print(processed_download_options[user_resolution][user_fps])
+            try:
+                user_video_ext = input("Choose your video extension\n> ")
+                if user_video_ext not in processed_download_options[user_resolution][user_fps]:
+                    print("Invalid input\n")
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            else:
+                flag_video_ext = True
+        clear_screen()
+        return [video_duration, user_resolution, user_fps, user_video_ext]
+    
+
+    def download_video(self, video_link, best=False) -> None:
+        """
+        Sends the download options into the YoutubeDL function
+        """
+        if best:
+            ydl_opts = {
+                'format': 'best',
+                'outtmpl': '%(title)s.%(ext)s'
+                }
+        else:
+            video_duration, user_resolution, user_fps, user_video_ext = self.get_user_download_options(video_link)
+            if video_duration <= 60:
+                ydl_opts = {
+                    'format': f'bestvideo[width<={user_resolution}][fps={user_fps}]+bestaudio',
+                    'merge_output_format': f'{user_video_ext}',
+                    'outtmpl': '%(title)s.%(ext)s'
+                    }
+            else:
+                ydl_opts = {
+                    'format': f'bestvideo[height<={user_resolution}][fps={user_fps}]+bestaudio',
+                    'merge_output_format': f'{user_video_ext}',
+                    'outtmpl': '%(title)s.%(ext)s'
+                    }
+        # Send the URL and options selected into downloading
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download(video_link)
+        return None
+
+
+def clear_screen() -> None:
+    """
+    Clear the console screen
+    """
+    os.system('cls' if os.name=='nt' else 'clear')
+    return None
+
+
+def set_download_location() -> None:
+    load_dotenv()
+    # Place the absolute path in the .env file
+    download_path = os.getenv("download_path")
+    os.chdir(download_path)
+    return None
