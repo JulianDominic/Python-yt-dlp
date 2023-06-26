@@ -1,18 +1,18 @@
-# Ignoring Information
-/.env
+# General
+.env
 __pycache__
 
 #Ignore venv
+Include
 Lib
 Scripts
-pyvenv.cfg
 share
-Include
+pyvenv.cfg
 
 # Ignoring Test Code
 testing.ipynb
+test*.py
+test*.ipynb
 
-# Ignore PyInstaller
-build
-dist
-main.spec
+# Temp
+README.md
