@@ -36,6 +36,8 @@ class Start:
         """
         Checks if the user has chosen the 'best' option for ydl_opts
         """
+        # Since the custom download options only works for Youtube Videos,
+        # other links will be passed through with the 'best' option
         if not(self.is_youtube_url(url)):
             return True
         while True:
@@ -82,16 +84,27 @@ class Download:
             download_options = {
                 "resolution": None,
                 "fps": None,
-                "video_ext": None
+                "video_ext": None,
+                "vcodec": None,
+                "aspect_ratio": None
                 }
             try:
-                format_note: str = single_format["format_note"]
+                # Using the 'resolution' key instead of 'format_note' because resolution is essentially <width>x<height>
+                # Thus, it would be easier to get the relevant information more easily to pass into ydl_opts
+                resolution: str = single_format["resolution"]
                 fps: str = single_format["fps"]
                 video_ext: str = single_format["ext"]
-                if format_note[0].isdigit():
-                    resolution = format_note.split('p')[0]
-                    download_options["resolution"], download_options["fps"], download_options["video_ext"] = resolution, fps, video_ext
+                vcodec: str = "".join(single_format["vcodec"][0:4])
+                aspect_ratio: float = single_format["aspect_ratio"]
+
+                if resolution[0].isdigit() and vcodec != 'none':
+                    # 3gp has been causing some issues | TODO: Possibly fix this
+                    if video_ext == '3gp':
+                        continue
+                    resolution = min([int(res) for res in resolution.split('x')])
+                    download_options["resolution"], download_options["fps"], download_options["video_ext"], download_options["vcodec"], download_options["aspect_ratio"] = resolution, int(fps), video_ext, vcodec, aspect_ratio
                     all_download_options.append(download_options)
+
             except KeyError:
                 continue
         else:
@@ -99,25 +112,28 @@ class Download:
             return [video_duration, all_download_options]
     
 
-    def get_user_download_options(self, video_link:str) -> list:
+    def get_user_download_video_options(self, video_link:str) -> list:
         """
         Get the user's input & download option
         """
         video_duration, all_download_options = self.parse_video_information_dict(video_link)
         processed_download_options = {}
         for download_option in all_download_options:
-            resolution, fps, video_ext = download_option["resolution"], download_option["fps"], download_option["video_ext"]
+            resolution, fps, video_ext, vcodec, aspect_ratio = download_option["resolution"], download_option["fps"], download_option["video_ext"], download_option["vcodec"], download_option["aspect_ratio"]
             resolution = int(resolution)
             if not(resolution in processed_download_options):
                 processed_download_options[resolution] = {}
             if not(fps in processed_download_options[resolution]):
-                processed_download_options[resolution][fps] = []
+                processed_download_options[resolution][fps] = {}
             if not(video_ext in processed_download_options[resolution][fps]):
-                processed_download_options[resolution][fps] += [video_ext]
+                processed_download_options[resolution][fps][video_ext] = []
+            if not(vcodec in processed_download_options[resolution][fps][video_ext]):
+                processed_download_options[resolution][fps][video_ext] += [vcodec]
         
         flag_resolution = False
         flag_fps = False
         flag_video_ext = False
+        flag_vcodec = False
 
         while not(flag_resolution):
             print([i for i in processed_download_options])
@@ -146,7 +162,7 @@ class Download:
                 flag_fps = True
 
         while not(flag_video_ext):
-            print(processed_download_options[user_resolution][user_fps])
+            print([k for k in processed_download_options[user_resolution][user_fps]])
             try:
                 user_video_ext = input("Choose your video extension\n> ")
                 if user_video_ext not in processed_download_options[user_resolution][user_fps]:
@@ -157,8 +173,22 @@ class Download:
                 continue
             else:
                 flag_video_ext = True
+
+        while not(flag_vcodec):
+            print(processed_download_options[user_resolution][user_fps][user_video_ext])
+            try:
+                user_vcodec = input("Choose your video codec\n> ")
+                if user_vcodec not in processed_download_options[user_resolution][user_fps][user_video_ext]:
+                    print("Invalid input\n")
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            else:
+                flag_vcodec = True
+
         clear_screen()
-        return [video_duration, user_resolution, user_fps, user_video_ext]
+        return [video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, aspect_ratio]
     
 
     def download_video(self, video_link, best=False) -> None:
@@ -171,16 +201,16 @@ class Download:
                 'outtmpl': '%(title)s.%(ext)s'
                 }
         else:
-            video_duration, user_resolution, user_fps, user_video_ext = self.get_user_download_options(video_link)
-            if video_duration <= 60:
+            video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, aspect_ratio = self.get_user_download_video_options(video_link)
+            if aspect_ratio < 1 and video_duration <= 60:
                 ydl_opts = {
-                    'format': f'bestvideo[width<={user_resolution}][fps={user_fps}]+bestaudio',
+                    'format': f'bestvideo[width<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio',
                     'merge_output_format': f'{user_video_ext}',
                     'outtmpl': '%(title)s.%(ext)s'
                     }
             else:
                 ydl_opts = {
-                    'format': f'bestvideo[height<={user_resolution}][fps={user_fps}]+bestaudio',
+                    'format': f'bestvideo[height<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio',
                     'merge_output_format': f'{user_video_ext}',
                     'outtmpl': '%(title)s.%(ext)s'
                     }
