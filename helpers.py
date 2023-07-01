@@ -79,7 +79,7 @@ class Download:
         for single_format in all_formats:
             single_format:dict
             acodec = single_format.get("acodec")
-            if acodec is None or acodec == "video only" or acodec == "unknown":
+            if acodec is None or acodec == "none" or acodec == "video only" or acodec == "unknown":
                 continue
             else:
                 acodec:str
