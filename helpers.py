@@ -71,6 +71,22 @@ class Download:
         return info_result
     
 
+    def get_available_acodecs(self, all_formats:list) -> list:
+        """
+        Get the available audio codecs
+        """
+        available_acodecs = []
+        for single_format in all_formats:
+            single_format:dict
+            acodec = single_format.get("acodec")
+            if acodec is None or acodec == "video only" or acodec == "unknown":
+                continue
+            else:
+                acodec:str
+                available_acodecs.append(acodec.split('.')[0])
+        return available_acodecs
+
+
     def parse_video_information_dict(self, video_link:str) -> list:
         """
         Parses the video_information_dict to get the download options
@@ -101,25 +117,39 @@ class Download:
                     # 3gp has been causing some issues | TODO: Possibly fix this
                     if video_ext == '3gp':
                         continue
+
                     resolution = min([int(res) for res in resolution.split('x')])
-                    download_options["resolution"], download_options["fps"], download_options["video_ext"], download_options["vcodec"], download_options["aspect_ratio"] = resolution, int(fps), video_ext, vcodec, aspect_ratio
+
+                    download_options["resolution"] = resolution
+                    download_options["fps"] = int(fps)
+                    download_options["video_ext"] = video_ext
+                    download_options["vcodec"] = vcodec
+                    download_options["aspect_ratio"] = aspect_ratio
+
                     all_download_options.append(download_options)
 
             except KeyError:
                 continue
+
         else:
             clear_screen()
-            return [video_duration, all_download_options]
+            available_acodecs = self.get_available_acodecs(all_formats)
+            return [video_duration, all_download_options, available_acodecs]
     
 
     def get_user_download_video_options(self, video_link:str) -> list:
         """
         Get the user's input & download option
         """
-        video_duration, all_download_options = self.parse_video_information_dict(video_link)
+        video_duration, all_download_options, available_acodecs = self.parse_video_information_dict(video_link)
         processed_download_options = {}
         for download_option in all_download_options:
-            resolution, fps, video_ext, vcodec, aspect_ratio = download_option["resolution"], download_option["fps"], download_option["video_ext"], download_option["vcodec"], download_option["aspect_ratio"]
+            resolution = download_option["resolution"]
+            fps = download_option["fps"]
+            video_ext = download_option["video_ext"]
+            vcodec = download_option["vcodec"]
+            aspect_ratio = download_option["aspect_ratio"]
+            
             resolution = int(resolution)
             if not(resolution in processed_download_options):
                 processed_download_options[resolution] = {}
@@ -134,6 +164,7 @@ class Download:
         flag_fps = False
         flag_video_ext = False
         flag_vcodec = False
+        flag_acodec = False
 
         while not(flag_resolution):
             print([i for i in processed_download_options])
@@ -186,9 +217,22 @@ class Download:
                 continue
             else:
                 flag_vcodec = True
+        
+        while not(flag_acodec):
+            print([l for l in available_acodecs])
+            try:
+                user_acodec = input("Choose your audio codec\n> ")
+                if user_acodec not in available_acodecs:
+                    print("Invalid input\n")
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            else:
+                flag_acodec = True
 
         clear_screen()
-        return [video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, aspect_ratio]
+        return [video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio]
     
 
     def download_video(self, video_link, best=False) -> None:
@@ -201,16 +245,16 @@ class Download:
                 'outtmpl': '%(title)s.%(ext)s'
                 }
         else:
-            video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, aspect_ratio = self.get_user_download_video_options(video_link)
+            video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio = self.get_user_download_video_options(video_link)
             if aspect_ratio < 1 and video_duration <= 60:
                 ydl_opts = {
-                    'format': f'bestvideo[width<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio',
+                    'format': f'bestvideo[width<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio[acodec^={user_acodec}]',
                     'merge_output_format': f'{user_video_ext}',
                     'outtmpl': '%(title)s.%(ext)s'
                     }
             else:
                 ydl_opts = {
-                    'format': f'bestvideo[height<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio',
+                    'format': f'bestvideo[height<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio[acodec^={user_acodec}]',
                     'merge_output_format': f'{user_video_ext}',
                     'outtmpl': '%(title)s.%(ext)s'
                     }
