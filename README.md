@@ -1,6 +1,6 @@
 # Python-yt-dlp
 
-`python-yt-dlp` is a wrapper for the [yt-dlp](https://github.com/yt-dlp/yt-dlp#readme) program that allows users to select their **resolution**, **fps**, and **video extension**. The program still runs via CLI but my intention is to run it via a Windows Batch File (`.bat`).
+`python-yt-dlp` is a wrapper for the [yt-dlp](https://github.com/yt-dlp/yt-dlp#readme) program that allows users to select their **resolution**, **fps**, **video extension**, and **video codec**. The program still runs via CLI but my intention is to run it via a Windows Batch File (`.bat`).
 
 ## Usage
 
