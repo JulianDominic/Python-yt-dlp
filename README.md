@@ -12,6 +12,12 @@
 6. Run `pip install -r requirements.txt`
 7. Run `python main.py`
 
+## Updating
+
+1. Download/Clone the repository
+2. Replace the old `main.py`, `helpers.py`, and `requirements.txt` files
+3. Run `pip install -r requirements.txt` to ensure that the package versions are the same as the latest commit
+
 ## Example of Batch File
 
 ``` bat
