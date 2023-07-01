@@ -75,7 +75,7 @@ class Download:
         """
         Get the available audio codecs
         """
-        available_acodecs = []
+        available_acodecs = set()
         for single_format in all_formats:
             single_format:dict
             acodec = single_format.get("acodec")
@@ -83,8 +83,8 @@ class Download:
                 continue
             else:
                 acodec:str
-                available_acodecs.append(acodec.split('.')[0])
-        return available_acodecs
+                available_acodecs.add(acodec.split('.')[0])
+        return sorted(available_acodecs)
 
 
     def parse_video_information_dict(self, video_link:str) -> list:
