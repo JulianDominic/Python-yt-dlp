@@ -4,9 +4,9 @@
 
 ## Usage
 
-1. Make sure Python is installed
-2. Make sure 7zip is installed (used for installing step 3 -- recommended)
-3. Make sure FFMPEG is installed
+1. Make sure [Python](https://www.python.org/downloads/) is installed
+2. Make sure [7zip](https://www.7-zip.org/download.html) is installed (used for installing step 3 -- recommended)
+3. Make sure [FFMPEG](https://ffmpeg.org/download.html) is installed (store it in your `download_path` or add it to `PATH`)
 4. Download/Clone the repository
 5. Create a `.env` file and store your `download_path`
 6. Run `pip install -r requirements.txt`
