@@ -92,7 +92,6 @@ class Download:
         Parses the video_information_dict to get the download options
         """
         video_information_dict = self.extract_video_information_dict(video_link)
-        video_duration = video_information_dict["duration"]
         all_formats = video_information_dict["formats"]
         
         all_download_options = []
@@ -134,14 +133,14 @@ class Download:
         else:
             clear_screen()
             available_acodecs = self.get_available_acodecs(all_formats)
-            return [video_duration, all_download_options, available_acodecs]
+            return [all_download_options, available_acodecs]
     
 
     def get_user_download_video_options(self, video_link:str) -> list:
         """
         Get the user's input & download option
         """
-        video_duration, all_download_options, available_acodecs = self.parse_video_information_dict(video_link)
+        all_download_options, available_acodecs = self.parse_video_information_dict(video_link)
         processed_download_options = {}
         for download_option in all_download_options:
             resolution = download_option["resolution"]
@@ -232,7 +231,7 @@ class Download:
                 flag_acodec = True
 
         clear_screen()
-        return [video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio]
+        return [user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio]
     
 
     def download_video(self, video_link, best=False) -> None:
@@ -245,8 +244,10 @@ class Download:
                 'outtmpl': '%(title)s.%(ext)s'
                 }
         else:
-            video_duration, user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio = self.get_user_download_video_options(video_link)
-            if aspect_ratio < 1 and video_duration <= 60:
+            user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio = self.get_user_download_video_options(video_link)
+
+            # There are vertical videos that are not shorts; Hence the video_duration is not a requirement
+            if aspect_ratio < 1:
                 ydl_opts = {
                     'format': f'bestvideo[width<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio[acodec^={user_acodec}]',
                     'merge_output_format': f'{user_video_ext}',
