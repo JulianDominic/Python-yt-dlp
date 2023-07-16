@@ -14,6 +14,24 @@ class Start:
             clear_screen()
         else:
             return video_link
+        
+    
+    def video_or_audio(self) -> bool:
+        """
+        Prompts the user to choose between downloading a video file or an audio file. Output: 1 True, 2 False
+        """
+        while True:
+            user_input = input("Do you want to download the video or just the audio?\n[1] Video\n[2] Audio\n> ")
+            if user_input not in ["1", "2"]:
+                print("Please enter either '1' or '2'.")
+            else:
+                if user_input == "1":
+                    clear_screen()
+                    return True
+                elif user_input == "2":
+                    clear_screen()
+                    return False
+
 
     def is_url(self, url:str) -> bool:
         """
@@ -260,6 +278,39 @@ class Download:
                     'outtmpl': '%(title)s.%(ext)s'
                     }
         # Send the URL and options selected into downloading
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download(video_link)
+        return None
+    
+
+    def get_user_audio_ext(self) -> str:
+        """
+        Get the user's prefered audio extension
+        """
+        while True:
+            audio_exts = ["m4a","aac","mp3","ogg","opus","webm"]
+            print([audio_ext for audio_ext in audio_exts])
+            try:
+                user_audio_ext = input("Choose your audio extension\n> ")
+                if user_audio_ext not in audio_exts:
+                    print("Invalid input\n")
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            else:
+                return user_audio_ext
+
+
+    def download_audio(self, video_link) -> None:
+        """
+        Download the best audio for the user using YoutubeDL class's download() method
+        """
+        audio_ext = self.get_user_audio_ext()
+        ydl_opts = {
+            'format': 'bestaudio',
+            'outtmpl': '%(title)s.' + audio_ext
+        }
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download(video_link)
         return None
