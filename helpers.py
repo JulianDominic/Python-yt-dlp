@@ -252,7 +252,7 @@ class Download:
         return [user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio]
     
 
-    def download_video(self, video_link, best=False) -> None:
+    def download_video(self, video_link:str, best=False) -> None:
         """
         Sends the download options into the YoutubeDL class's download() method
         """
@@ -283,10 +283,14 @@ class Download:
         return None
     
 
-    def get_user_audio_ext(self) -> str:
+    def get_user_audio_options(self, video_link:str) -> str:
         """
-        Get the user's prefered audio extension
+        Get the user's prefered audio options. (i) ext (ii) codec
         """
+        video_information_dict = self.extract_video_information_dict(video_link)
+        all_formats = video_information_dict["formats"]
+        acodecs = self.get_available_acodecs(all_formats)
+        
         while True:
             audio_exts = ["m4a","aac","mp3","ogg","opus","webm"]
             print([audio_ext for audio_ext in audio_exts])
@@ -299,16 +303,30 @@ class Download:
                 print(e)
                 continue
             else:
-                return user_audio_ext
+                break
+
+        while True:
+            print([acodec for acodec in acodecs])
+            try:
+                user_audio_codec = input("Choose your audio codec\n> ")
+                if user_audio_codec not in acodecs:
+                    print("Invalid input\n")
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            else:
+                return [user_audio_ext, user_audio_codec]
 
 
-    def download_audio(self, video_link) -> None:
+    def download_audio(self, video_link:str) -> None:
         """
         Download the best audio for the user using YoutubeDL class's download() method
         """
-        audio_ext = self.get_user_audio_ext()
+        user_audio_options = self.get_user_audio_options(video_link)
+        audio_ext, acodec = user_audio_options[0], user_audio_options[1]
         ydl_opts = {
-            'format': 'bestaudio',
+            'format': f'bestaudio[acodec^={acodec}]',
             'outtmpl': '%(title)s.' + audio_ext
         }
         with YoutubeDL(ydl_opts) as ydl:
