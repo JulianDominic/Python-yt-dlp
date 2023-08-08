@@ -14,5 +14,9 @@ testing.ipynb
 test*.py
 test*.ipynb
 
+# Ignore PyQt Stuff
+*.lnk
+# *.ico
+
 # Temp
 README.md
