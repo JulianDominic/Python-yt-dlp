@@ -16,7 +16,7 @@ test*.ipynb
 
 # Ignore PyQt Stuff
 *.lnk
-*.ico
+# *.ico
 
 # Temp
 README.md
