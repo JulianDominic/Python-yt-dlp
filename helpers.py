@@ -77,7 +77,29 @@ class Start:
             return True
         else:
             return False
+        
     
+    def is_instagram_url(self, url:str) -> bool:
+        """
+        Checks if the URL is from Instagram
+        """
+        insta_urls = ["instagram"]
+        if any([insta_url in url for insta_url in insta_urls]):
+            return True
+        else:
+            return False
+        
+
+    def is_twitter_url(self, url:str) -> bool:
+        """
+        Checks if the URL is from Twitter (or X)
+        """
+        twitter_urls = ["twitter", "t.co"]
+        if any([twitter_url in url for twitter_url in twitter_urls]):
+            return True
+        else:
+            return False
+
 
 class Download:
     def extract_video_information_dict(self, video_link:str) -> dict:
@@ -257,10 +279,15 @@ class Download:
         Sends the download options into the YoutubeDL class's download() method
         """
         if best:
+            url_checker = Start()
             ydl_opts = {
+                'ignoreerrors': 'only_download',
                 'format': 'best',
-                'outtmpl': '%(title)s.%(ext)s'
+                # 'outtmpl': '%(title)s.%(ext)s'
                 }
+            if url_checker.is_instagram_url(video_link) or url_checker.is_twitter_url(video_link):
+                user_browser = input("Enter the name of the browser you use to access the link (eg. Chrome, Firefox)\n> ")
+                ydl_opts['cookiesfrombrowser'] = [user_browser.lower()]
         else:
             if not(gui):
                 user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio = self.get_user_download_video_options(video_link)
