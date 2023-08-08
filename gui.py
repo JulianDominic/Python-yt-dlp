@@ -1,15 +1,17 @@
-import sys
+import sys, os
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QLabel
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from PyQt6 import uic
 from helpers import Start, Download, set_download_location
+from dotenv import load_dotenv
 
 class MyApp(QWidget):
     def __init__(self):
         super().__init__()
-        uic.loadUi("./yt-dlp.ui", self)
-        self.setWindowIcon(QIcon("./transparent.ico"))
+        load_dotenv()
+        uic.loadUi(f"{os.getenv('ui_path')}", self)
+        self.setWindowIcon(QIcon(f"{os.getenv('transparent_icon_path')}"))
         self.all_video_download_options = None
         self.available_acodecs = None
         self.extracted_yt_download_opts = []
