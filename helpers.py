@@ -274,7 +274,7 @@ class Download:
         return [user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio]
     
 
-    def download_video(self, video_link:str, best=False, gui=False, user_resolution=None, user_fps=None, user_video_ext=None, user_vcodec=None, user_acodec=None, aspect_ratio=None) -> None:
+    def download_video(self, video_link:str, best=False, user_resolution=None, user_fps=None, user_video_ext=None, user_vcodec=None, user_acodec=None, aspect_ratio=None) -> None:
         """
         Sends the download options into the YoutubeDL class's download() method
         """
@@ -283,14 +283,13 @@ class Download:
             ydl_opts = {
                 'ignoreerrors': 'only_download',
                 'format': 'best',
-                # 'outtmpl': '%(title)s.%(ext)s'
+                'outtmpl': '%(title)s.%(ext)s'
                 }
             if url_checker.is_instagram_url(video_link) or url_checker.is_twitter_url(video_link):
                 user_browser = input("Enter the name of the browser you use to access the link (eg. Chrome, Firefox)\n> ")
                 ydl_opts['cookiesfrombrowser'] = [user_browser.lower()]
         else:
-            if not(gui):
-                user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio = self.get_user_download_video_options(video_link)
+            user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio = self.get_user_download_video_options(video_link)
 
             # There are vertical videos that are not shorts; Hence the video_duration is not a requirement
             if aspect_ratio < 1:
@@ -347,13 +346,12 @@ class Download:
                 return [user_audio_ext, user_audio_codec]
 
 
-    def download_audio(self, video_link:str, gui=False, audio_ext=None, acodec=None) -> None:
+    def download_audio(self, video_link:str, audio_ext=None, acodec=None) -> None:
         """
         Download the best audio for the user using YoutubeDL class's download() method
         """
-        if not(gui):
-            user_audio_options = self.get_user_audio_options(video_link)
-            audio_ext, acodec = user_audio_options[0], user_audio_options[1]
+        user_audio_options = self.get_user_audio_options(video_link)
+        audio_ext, acodec = user_audio_options[0], user_audio_options[1]
         ydl_opts = {
             'format': f'bestaudio[acodec^={acodec}]',
             'outtmpl': '%(title)s.' + audio_ext
