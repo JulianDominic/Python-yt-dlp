@@ -1,8 +1,12 @@
-import os, re
+import os, re, sys
 from yt_dlp import YoutubeDL
 from dotenv import load_dotenv
 
 class Start:
+    def __init__(self):
+        self.yt_playlist = False
+
+
     def get_url_from_user(self) -> str:
         """
         Prompts the user for the video link
@@ -74,9 +78,21 @@ class Start:
         """
         yt_urls = ["youtube", "youtu.be"]
         if any([yt_url in url for yt_url in yt_urls]):
+            self.is_youtube_playlist(url)
             return True
         else:
             return False
+        
+    
+    def is_youtube_playlist(self, url:str) -> None:
+        """
+        Checks if the URL is for a youtube playlist
+        """
+        if "playlist" in url:
+            self.yt_playlist = True
+        else:
+            self.yt_playlist = False
+        return None
         
     
     def is_instagram_url(self, url:str) -> bool:
@@ -102,16 +118,41 @@ class Start:
 
 
 class Download:
-    def extract_video_information_dict(self, video_link:str) -> dict:
+    def extract_video_information_dict(self, video_link:str, ydl_opts=None) -> dict:
         """
         Gets the video information provided by the website
         """
-        with YoutubeDL() as ydl:
-            info_result = ydl.extract_info(video_link, download=False)
+        original_stdout = stop_stdout()
+        if ydl_opts is None:
+            with YoutubeDL() as ydl:
+                info_result = ydl.extract_info(video_link, download=False)
+        else:
+            with YoutubeDL(ydl_opts) as ydl:
+                info_result = ydl.extract_info(video_link, download=False)
+        start_stdout(original_stdout)
         return info_result
     
 
-    def get_available_acodecs(self, all_formats:list) -> list:
+    def process_playlist(self, video_link:str) -> list[str]:
+        """
+        Gets the URLs of the videos that are available in the playlist
+        """
+        ydl_opts = {
+            'extract_flat': 'discard_in_playlist',
+            'fragment_retries': 10,
+            'ignoreerrors': 'only_download',
+            'postprocessors': [{'key': 'FFmpegConcat',
+                                'only_multi_video': True,
+                                'when': 'playlist'}],
+            'retries': 10
+        }
+        print("Processing the playlist...")
+        playlist_dict = self.extract_video_information_dict(video_link, ydl_opts)
+        print("Finished processing the playlist.")
+        return [video_dict['url'] for video_dict in playlist_dict['entries'] if video_dict != None]
+    
+
+    def get_available_acodecs(self, all_formats:list) -> list[set]:
         """
         Get the available audio codecs
         """
@@ -127,7 +168,7 @@ class Download:
         return sorted(available_acodecs)
 
 
-    def parse_video_information_dict(self, video_link:str) -> list:
+    def parse_video_information_dict(self, video_link:str) -> list[list]:
         """
         Parses the video_information_dict to get the download options
         """
@@ -377,4 +418,21 @@ def set_download_location() -> None:
     # Place the absolute path in the .env file
     download_path = os.getenv("download_path")
     os.chdir(download_path)
+    return None
+
+
+def stop_stdout() -> sys.stdout:
+    """
+    Stops the standard output
+    """
+    original_stdout = sys.stdout
+    sys.stdout = open('NUL', 'w')
+    return original_stdout
+
+
+def start_stdout(original_stdout:sys.stdout) -> None:
+    """
+    Starts the standard output
+    """
+    sys.stdout = original_stdout
     return None

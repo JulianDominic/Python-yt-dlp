@@ -11,7 +11,13 @@ def main():
     dl = Download()
     if video_audio:
         best = start.is_best(url)
-        dl.download_video(url, best)
+        playlist = start.yt_playlist
+        if playlist:
+            urls = dl.process_playlist(url)
+            for url in urls:
+                dl.download_video(url)
+        else:
+            dl.download_video(url, best)
     else:
         dl.download_audio(url)
 
