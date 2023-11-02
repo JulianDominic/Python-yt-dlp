@@ -28,7 +28,7 @@
 2. Make sure [7zip](https://www.7-zip.org/download.html) is installed (used for installing step 3 -- recommended)
 3. Make sure [FFMPEG](https://ffmpeg.org/download.html) is installed (store it in your `download_path` or add it to `PATH`)
 4. Download/Clone the repository
-5. Create a `.env` file and store your `download_path`. In Powershell, type `New-Item .env` or in Bash, type `touch .env`. Edit the `.env` to contain `download_path=YOUR/DOWNLOAD/PATH/HERE`
+5. Create a `.env` file (save this in the same file as where you downloaded/cloned the repository) to store your `download_path`. In Powershell, type `New-Item .env` or in Bash, type `touch .env`. Edit the `.env` to contain `download_path=YOUR/DOWNLOAD/PATH/HERE`
 6. Run `pip install -r requirements.txt`
 7. Run `python main.py`
 
@@ -37,6 +37,12 @@
 1. Download/Clone the repository
 2. Replace the old `main.py`, `helpers.py`, and `requirements.txt` files
 3. Run `pip install -r requirements.txt` to ensure that the package versions are the same as the latest commit
+
+## Example of .env File
+
+``` env
+download_path=YOUR/DOWNLOAD/PATH/HERE
+```
 
 ## Example of Batch File
 
