@@ -10,10 +10,7 @@ share
 pyvenv.cfg
 
 # Ignoring Test Code
-testing.ipynb
-test*.py
-test*.ipynb
+test-code
 
 # README
 README.md
-# images

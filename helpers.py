@@ -48,10 +48,7 @@ class Start:
                 r"(/.*)?$",  # match path and query string if present
                 re.IGNORECASE
                 )
-        if url_regex.search(url):
-            return True
-        else:
-            return False
+        return url_regex.search(url)
     
 
     def is_best(self, url:str) -> bool:
@@ -315,6 +312,18 @@ class Download:
         return [user_resolution, user_fps, user_video_ext, user_vcodec, user_acodec, aspect_ratio]
     
 
+    def download_subtitles(self, ydl_opts:dict):
+        """
+        Asks the user whether they want to download subtitles provided by the creator. English only.
+        """
+        subtitle_decision = input("Download English subs? (Y/n): ")
+        if subtitle_decision.lower() in ['y', '']:
+            ydl_opts['subtitleslangs'] = ['en.*']
+            ydl_opts['writeautomaticsub'] =  False
+            ydl_opts['writesubtitles'] = True
+        return ydl_opts
+    
+
     def download_video(self, video_link:str, best=False, user_resolution=None, user_fps=None, user_video_ext=None, user_vcodec=None, user_acodec=None, aspect_ratio=None) -> None:
         """
         Sends the download options into the YoutubeDL class's download() method
@@ -343,8 +352,9 @@ class Download:
                 ydl_opts = {
                     'format': f'bestvideo[height<={user_resolution}][fps={user_fps}][vcodec^={user_vcodec}]+bestaudio[acodec^={user_acodec}]',
                     'merge_output_format': f'{user_video_ext}',
-                    'outtmpl': '%(title)s.%(ext)s'
+                    'outtmpl': '%(title)s.%(ext)s',
                     }
+            ydl_opts = self.download_subtitles(ydl_opts)
         # Send the URL and options selected into downloading
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download(video_link)
